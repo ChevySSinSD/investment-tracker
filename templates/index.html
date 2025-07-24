@@ -1,13 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Transactions</h1>
+  <h1>Portfolio Summary (Live)</h1>
+  {% if portfolio %}
+  <table>
+    <tr><th>Ticker</th><th>Qty</th><th>Price</th><th>Value</th></tr>
+    {% for asset in portfolio %}
+    <tr>
+      <td>{{ asset.ticker }}</td>
+      <td>{{ asset.quantity }}</td>
+      <td>{{ "%.2f"|format(asset.price) }}</td>
+      <td>{{ "%.2f"|format(asset.value) }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No current holdings.</p>
+  {% endif %}
+
+  <h2>All Transactions</h2>
   <table>
     <tr><th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Type</th></tr>
     {% for t in transactions %}
     <tr>
-      <td>{{ t.date }}</td><td>{{ t.ticker }}</td>
-      <td>{{ t.quantity }}</td><td>{{ t.price }}</td>
-      <td>{{ t.type }}</td>
+      <td>{{ t.date }}</td>
+      <td>{{ t.ticker }}</td>
+      <td>{{ t.quantity }}</td>
+      <td>{{ t.price }}</td>
+      <td>{{ t.transaction_type }}</td>
     </tr>
     {% endfor %}
   </table>
