@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Depends, File, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from io import StringIO
 import csv
@@ -125,3 +126,52 @@ def gains_view(ticker: str, db: Session = Depends(get_db)):
         "realized_gain_fifo": gain_fifo,
         "realized_gain_lifo": gain_lifo
     }
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def portfolio_dashboard(request: Request, db: Session = Depends(get_db)):
+    txns = crud.get_all_transactions(db)
+
+    holdings = {}
+    total_invested = {}
+    for txn in txns:
+        ticker = txn.ticker.strip().upper()
+        qty = float(txn.quantity)
+        if txn.type == "buy":
+            holdings[ticker] = holdings.get(ticker, 0) + qty
+            total_invested[ticker] = total_invested.get(ticker, 0) + qty * txn.price + txn.fee
+        elif txn.type == "sell":
+            holdings[ticker] = holdings.get(ticker, 0) - qty  # reduce quantity
+
+    portfolio = []
+    total_value = 0
+    total_cost = 0
+    for ticker, qty in holdings.items():
+        if qty <= 0:
+            continue
+        price, as_of = get_latest_price(ticker)
+        value = qty * price
+        cost = total_invested.get(ticker, 0)
+        gain = value - cost
+        total_value += value
+        total_cost += cost
+
+        realized_gain = compute_realized_gains(db, ticker, method="fifo")
+        portfolio.append({
+            "ticker": ticker,
+            "quantity": qty,
+            "price": price,
+            "value": round(value, 2),
+            "cost": round(cost, 2),
+            "unrealized_gain": round(gain, 2),
+            "realized_gain": realized_gain,
+            "as_of": as_of
+        })
+
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "portfolio": portfolio,
+        "total_value": round(total_value, 2),
+        "total_cost": round(total_cost, 2),
+        "total_unrealized": round(total_value - total_cost, 2),
+        "total_realized": sum(p["realized_gain"] for p in portfolio)
+    })

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📊 Portfolio Performance Dashboard</h1>
+
+<p><strong>Total Value:</strong> ${{ total_value }}</p>
+<p><strong>Total Invested:</strong> ${{ total_cost }}</p>
+<p><strong>Unrealized Gain/Loss:</strong> ${{ total_unrealized }}</p>
+<p><strong>Realized Gain (FIFO):</strong> ${{ total_realized }}</p>
+
+<table>
+  <tr>
+    <th>Ticker</th><th>Qty</th><th>Price</th><th>Value</th>
+    <th>Cost</th><th>Unrealized</th><th>Realized</th><th>As of</th>
+  </tr>
+  {% for p in portfolio %}
+  <tr>
+    <td>{{ p.ticker }}</td>
+    <td>{{ p.quantity }}</td>
+    <td>${{ "%.2f"|format(p.price) }}</td>
+    <td>${{ "%.2f"|format(p.value) }}</td>
+    <td>${{ "%.2f"|format(p.cost) }}</td>
+    <td>${{ "%.2f"|format(p.unrealized_gain) }}</td>
+    <td>${{ "%.2f"|format(p.realized_gain) }}</td>
+    <td>{{ p.as_of }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
