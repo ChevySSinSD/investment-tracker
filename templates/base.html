@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title or "Tracker" }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/">Dashboard</a> |
+    <a href="/import">Import CSV</a>
+  </nav>
+  <hr>
+  {% block content %}{% endblock %}
+</body>
+</html>
