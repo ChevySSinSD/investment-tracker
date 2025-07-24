@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from io import StringIO
 import csv
 
-from . import models, crud, schemas
+from app import models, crud, schemas
 from .database import engine, SessionLocal
 from .pricing import get_latest_price, get_historical_prices
 
@@ -64,18 +64,43 @@ async def import_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    """
+    Imports transactions from a CSV file.
+
+    Expected CSV columns: date, ticker, quantity, price, type (optional, defaults to 'buy').
+    Each row is validated; if a row is missing required fields or contains invalid data,
+    an error message is displayed indicating the row number and error.
+    Duplicate transactions (same date, ticker, quantity, price, type) are skipped.
+    """
     content = await file.read()
-    reader = csv.DictReader(StringIO(content.decode("utf-8")))
-    for row in reader:
-        txn = schemas.TransactionCreate(
-            date=row["date"],
-            ticker=row["ticker"],
-            quantity=float(row["quantity"]),
-            price=float(row["price"]),
-            type=row.get("type", "buy")  # use 'type' instead of 'transaction_type'
-        )
-        crud.add_transaction(db, txn)
-    message = f"Uploaded {reader.line_num - 1} transactions"
+    try:
+        reader = csv.DictReader(StringIO(content.decode("utf-8")))
+        count = 0
+        skipped = 0
+        for row in reader:
+            try:
+                txn = schemas.TransactionCreate(
+                    date=row["date"],
+                    ticker=row["ticker"],
+                    quantity=float(row["quantity"]),
+                    price=float(row["price"]),
+                    type=row.get("type", "buy")
+                )
+                added = crud.add_transaction(db, txn)
+                if added:
+                    count += 1
+                else:
+                    skipped += 1
+            except (KeyError, ValueError) as e:
+                return templates.TemplateResponse("import.html", {
+                    "request": request,
+                    "message": f"Error in row {reader.line_num}: {e}"
+                })
+        message = f"Uploaded {count} transactions"
+        if skipped:
+            message += f" (Skipped {skipped} duplicates)"
+    except Exception as e:
+        message = f"Failed to process CSV file: {e}"
     return templates.TemplateResponse("import.html", {"request": request, "message": message})
 
 @app.get("/chart/{ticker}")
