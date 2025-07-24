@@ -39,12 +39,13 @@ def read_portfolio(request: Request, db: Session = Depends(get_db)):
     for ticker, qty in holdings.items():
         if qty == 0:
             continue
-        price = get_latest_price(ticker)
+        price, as_of = get_latest_price(ticker)
         portfolio.append({
             "ticker": ticker,
             "quantity": qty,
             "price": price,
-            "value": round(qty * price, 2)
+            "value": round(qty * price, 2),
+            "as_of": as_of
         })
 
     return templates.TemplateResponse("index.html", {
