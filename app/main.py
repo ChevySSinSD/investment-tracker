@@ -8,6 +8,7 @@ import csv
 from app import models, crud, schemas
 from .database import engine, SessionLocal
 from .pricing import get_latest_price, get_historical_prices
+from .crud import compute_realized_gains
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -114,3 +115,13 @@ def show_chart(ticker: str, request: Request):
         "labels": labels,
         "prices": prices
     })
+
+@app.get("/gains/{ticker}")
+def gains_view(ticker: str, db: Session = Depends(get_db)):
+    gain_fifo = compute_realized_gains(db, ticker.upper(), method="fifo")
+    gain_lifo = compute_realized_gains(db, ticker.upper(), method="lifo")
+    return {
+        "ticker": ticker.upper(),
+        "realized_gain_fifo": gain_fifo,
+        "realized_gain_lifo": gain_lifo
+    }
