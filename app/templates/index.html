@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Investment Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        form { margin-bottom: 1rem; }
+        label { margin-right: 0.5rem; }
+        input, select { margin-right: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>Investment Tracker</h1>
+
+    <form method="post">
+        <label>Symbol: <input type="text" name="symbol" required></label>
+        <label>Date: <input type="date" name="date" required></label>
+        <label>Type:
+            <select name="type">
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
+                <option value="dividend">Dividend</option>
+            </select>
+        </label>
+        <label>Quantity: <input type="number" step="any" name="quantity" required></label>
+        <label>Price: <input type="number" step="any" name="price" required></label>
+        <button type="submit">Add Transaction</button>
+    </form>
+
+    <h2>Transactions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Symbol</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for tx in transactions %}
+            <tr>
+                <td>{{ tx.id }}</td>
+                <td>{{ tx.symbol }}</td>
+                <td>{{ tx.date }}</td>
+                <td>{{ tx.type }}</td>
+                <td>{{ tx.quantity }}</td>
+                <td>{{ tx.price }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
