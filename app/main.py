@@ -36,8 +36,11 @@ async def import_csv(request: Request,
     reader = csv.DictReader(StringIO(content.decode("utf-8")))
     for row in reader:
         txn = schemas.TransactionCreate(
-            date=row["date"], ticker=row["ticker"],
-            quantity=float(row["quantity"]), price=float(row["price"])
+            date=row["date"],
+            ticker=row["ticker"],
+            quantity=float(row["quantity"]),
+            price=float(row["price"]),
+            transaction_type=row.get("transaction_type", "buy")  # New line
         )
         crud.add_transaction(db, txn)
     message = "Uploaded {} transactions".format(reader.line_num - 1)

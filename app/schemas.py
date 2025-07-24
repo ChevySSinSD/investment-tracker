@@ -6,3 +6,4 @@ class TransactionCreate(BaseModel):
     ticker: str
     quantity: float
     price: float
+    type: str = "buy"

@@ -2,11 +2,12 @@
 {% block content %}
   <h1>Transactions</h1>
   <table>
-    <tr><th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th></tr>
+    <tr><th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Type</th></tr>
     {% for t in transactions %}
     <tr>
       <td>{{ t.date }}</td><td>{{ t.ticker }}</td>
       <td>{{ t.quantity }}</td><td>{{ t.price }}</td>
+      <td>{{ t.type }}</td>
     </tr>
     {% endfor %}
   </table>

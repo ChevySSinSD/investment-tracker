@@ -8,3 +8,4 @@ class Transaction(Base):
     ticker = Column(String, nullable=False)
     quantity = Column(Float, nullable=False)
     price = Column(Float, nullable=False)
+    type = Column(String, nullable=False, default="buy")
