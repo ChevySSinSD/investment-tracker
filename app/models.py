@@ -3,9 +3,12 @@ from .database import Base
 
 class Transaction(Base):
     __tablename__ = "transactions"
+
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False)
     quantity = Column(Float, nullable=False)
     price = Column(Float, nullable=False)
     type = Column(String, nullable=False, default="buy")
+    fee = Column(Float, nullable=True, default=0.0)
+    currency = Column(String, nullable=True, default="USD")

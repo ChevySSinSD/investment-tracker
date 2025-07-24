@@ -7,3 +7,5 @@ class TransactionCreate(BaseModel):
     quantity: float
     price: float
     type: str = "buy"
+    fee: float = 0.0
+    currency: str = "USD"

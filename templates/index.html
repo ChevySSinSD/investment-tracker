@@ -20,13 +20,14 @@
 
   <h2>All Transactions</h2>
   <table>
-    <tr><th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Type</th></tr>
+    <th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Fee</th><th>Type</th>
     {% for t in transactions %}
     <tr>
       <td>{{ t.date }}</td>
       <td>{{ t.ticker }}</td>
       <td>{{ t.quantity }}</td>
       <td>{{ t.price }}</td>
+      <td>{{ t.fee }}</td>
       <td>{{ t.type }}</td>
     </tr>
     {% endfor %}

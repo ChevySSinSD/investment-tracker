@@ -81,11 +81,13 @@ async def import_csv(
             try:
                 txn = schemas.TransactionCreate(
                     date=row["date"],
-                    ticker=row["ticker"],
+                    ticker=row["ticker"].strip().upper(),  # normalize here
                     quantity=float(row["quantity"]),
                     price=float(row["price"]),
-                    type=row.get("type", "buy")
-                )
+                    type=row.get("type", "buy").lower(),
+                    fee=float(row.get("fee", 0.0)),
+                    currency=row.get("currency", "USD").upper()
+            )
                 added = crud.add_transaction(db, txn)
                 if added:
                     count += 1
