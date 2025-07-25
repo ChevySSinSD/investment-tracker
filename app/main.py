@@ -109,14 +109,20 @@ async def import_csv(
                     "request": request,
                     "message": f"Error in row {reader.line_num}: {e}"
                 })
-        backfill_snapshots(db)
         message = f"Uploaded {count} transactions"
         if skipped:
             message += f" (Skipped {skipped} duplicates)"
+        if count > 0:
+            try:
+                db.commit()
+                backfill_snapshots(db)
+            except Exception as e:
+                db.rollback()
+                message += f"Error processing performance backfill: {e}"
     except Exception as e:
         message = f"Failed to process CSV file: {e}"
     return templates.TemplateResponse("import.html", {"request": request, "message": message})
-
+    
 @app.get("/chart/{ticker}")
 def show_chart(ticker: str, request: Request):
     labels, prices = get_historical_prices(ticker)

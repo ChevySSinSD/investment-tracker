@@ -1,4 +1,5 @@
 from . import models, crud
+from .models import Transaction
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import timedelta, date
@@ -59,41 +60,75 @@ def backfill_snapshots(db: Session):
     tickers = db.query(models.Transaction.ticker).distinct()
     symbols = [t[0].upper() for t in tickers]
 
-    price_data = yf.download(symbols, start=first_date, end=last_date + timedelta(days=1))["Adj Close"]
+    price_data = yf.download(symbols, start=first_date, end=last_date + timedelta(days=1))["Close"]
     if isinstance(price_data, pd.Series):
         price_data = price_data.to_frame()
+    
+    last_price = {}  # Ticker -> last known price
 
     current_date = first_date
     while current_date <= last_date:
-        txns = (
-            db.query(models.Transaction)
-            .filter(models.Transaction.date <= current_date)
-            .order_by(models.Transaction.date)
-            .all()
-        )
+        txns = db.query(models.Transaction).filter(models.Transaction.date <= current_date).order_by(models.Transaction.date).all()
 
-        current_holdings = {}
+        lots = {}  # {ticker: list of (qty, cost per share)}
+        holdings = {}
+        total_value = 0
+        total_cost = 0
+        total_realized = 0
+
         for txn in txns:
             t = txn.ticker.upper()
-            if t not in current_holdings:
-                current_holdings[t] = 0
-            if txn.type == "buy":
-                current_holdings[t] += txn.quantity
-            elif txn.type == "sell":
-                current_holdings[t] -= txn.quantity
+            if t not in lots:
+                lots[t] = []
 
-        total_value = 0
-        for ticker, qty in current_holdings.items():
+            if txn.type == "buy":
+                lots[t].append([txn.quantity, txn.price])
+            elif txn.type == "sell":
+                qty_to_sell = txn.quantity
+                cost_basis = 0
+                proceeds = qty_to_sell * txn.price
+
+                while qty_to_sell > 0 and lots[t]:
+                    lot_qty, lot_price = lots[t][0]
+                    if lot_qty <= qty_to_sell:
+                        cost_basis += lot_qty * lot_price
+                        qty_to_sell -= lot_qty
+                        lots[t].pop(0)
+                    else:
+                        cost_basis += qty_to_sell * lot_price
+                        lots[t][0][0] -= qty_to_sell
+                        qty_to_sell = 0
+
+                realized = proceeds - cost_basis
+                total_realized += realized
+
+        for ticker, qty_price_list in lots.items():
+            qty = sum(qty for qty, _ in qty_price_list)
+            cost = sum(qty * price for qty, price in qty_price_list)
+
             try:
                 price = price_data[ticker].get(current_date.strftime("%Y-%m-%d"))
+                if price:
+                    last_price[ticker] = price
+                else:
+                    price = last_price.get(ticker)
+
                 if price and qty > 0:
                     total_value += qty * price
+                    total_cost += cost
             except Exception:
                 continue
 
-        if total_value > 0:
-            snapshot = models.PortfolioSnapshot(date=current_date, total_value=round(total_value, 2))
-            db.merge(snapshot)
+        total_unrealized = total_value - total_cost
+
+        snapshot = models.PortfolioSnapshot(
+            date=current_date,
+            total_value=round(total_value, 2),
+            total_cost=round(total_cost, 2),
+            total_unrealized=round(total_unrealized, 2),
+            total_realized=round(total_realized, 2)
+        )
+        db.merge(snapshot)
 
         current_date += timedelta(days=1)
 
