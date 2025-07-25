@@ -11,6 +11,7 @@ from .database import engine, SessionLocal
 from .pricing import get_latest_price, get_historical_prices
 from .crud import compute_realized_gains, save_portfolio_snapshot
 from apscheduler.schedulers.background import BackgroundScheduler
+from .models import PortfolioSnapshot
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -24,6 +25,20 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@app.get("/performance", response_class=HTMLResponse)
+def performance_view(request: Request, db: Session = Depends(get_db)):
+    snapshots = db.query(PortfolioSnapshot).order_by(PortfolioSnapshot.date).all()
+    data = {
+        "dates": [s.date.strftime("%Y-%m-%d") for s in snapshots],
+        "value": [s.total_value for s in snapshots],
+        "unrealized": [s.total_unrealized for s in snapshots],
+        "realized": [s.total_realized for s in snapshots],
+    }
+    return templates.TemplateResponse("performance.html", {
+        "request": request,
+        "data": data
+    })
 
 @app.on_event("startup")
 def start_scheduler():

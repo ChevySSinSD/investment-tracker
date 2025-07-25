@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📊 Portfolio Performance Over Time</h1>
+<canvas id="performanceChart" width="900" height="400"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const chartData = {{ data | tojson }};
+
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: chartData.dates,
+        datasets: [
+            {
+                label: 'Total Value',
+                data: chartData.value,
+                borderColor: 'rgb(75, 192, 192)',
+                fill: false
+            },
+            {
+                label: 'Unrealized Gain',
+                data: chartData.unrealized,
+                borderColor: 'rgb(255, 205, 86)',
+                fill: false
+            },
+            {
+                label: 'Realized Gain',
+                data: chartData.realized,
+                borderColor: 'rgb(255, 99, 132)',
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Portfolio Performance History' }
+        },
+        scales: {
+            y: { beginAtZero: false }
+        }
+    }
+});
+</script>
+{% endblock %}
