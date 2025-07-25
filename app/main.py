@@ -9,7 +9,8 @@ import csv
 from app import models, crud, schemas
 from .database import engine, SessionLocal
 from .pricing import get_latest_price, get_historical_prices
-from .crud import compute_realized_gains
+from .crud import compute_realized_gains, save_portfolio_snapshot
+from apscheduler.schedulers.background import BackgroundScheduler
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -23,6 +24,12 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@app.on_event("startup")
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(lambda: save_portfolio_snapshot(next(get_db())), "cron", hour=17, minute=00)
+    scheduler.start()
 
 @app.get("/")
 def read_portfolio(request: Request, db: Session = Depends(get_db)):
