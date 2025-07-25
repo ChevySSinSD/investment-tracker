@@ -9,9 +9,10 @@ import csv
 from app import models, crud, schemas
 from .database import engine, SessionLocal
 from .pricing import get_latest_price, get_historical_prices
-from .crud import compute_realized_gains, save_portfolio_snapshot
+from .crud import compute_realized_gains
 from apscheduler.schedulers.background import BackgroundScheduler
 from .models import PortfolioSnapshot
+from .snapshots import backfill_snapshots, save_daily_snapshot_if_needed
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -26,24 +27,10 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/performance", response_class=HTMLResponse)
-def performance_view(request: Request, db: Session = Depends(get_db)):
-    snapshots = db.query(PortfolioSnapshot).order_by(PortfolioSnapshot.date).all()
-    data = {
-        "dates": [s.date.strftime("%Y-%m-%d") for s in snapshots],
-        "value": [s.total_value for s in snapshots],
-        "unrealized": [s.total_unrealized for s in snapshots],
-        "realized": [s.total_realized for s in snapshots],
-    }
-    return templates.TemplateResponse("performance.html", {
-        "request": request,
-        "data": data
-    })
-
 @app.on_event("startup")
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(lambda: save_portfolio_snapshot(next(get_db())), "cron", hour=17, minute=00)
+    scheduler.add_job(lambda: save_daily_snapshot_if_needed(next(get_db())), "cron", hour=17, minute=00)
     scheduler.start()
 
 @app.get("/")
@@ -122,6 +109,7 @@ async def import_csv(
                     "request": request,
                     "message": f"Error in row {reader.line_num}: {e}"
                 })
+        backfill_snapshots(db)
         message = f"Uploaded {count} transactions"
         if skipped:
             message += f" (Skipped {skipped} duplicates)"
@@ -196,4 +184,26 @@ def portfolio_dashboard(request: Request, db: Session = Depends(get_db)):
         "total_cost": round(total_cost, 2),
         "total_unrealized": round(total_value - total_cost, 2),
         "total_realized": sum(p["realized_gain"] for p in portfolio)
+    })
+
+@app.get("/performance", response_class=HTMLResponse)
+def performance_view(request: Request, db: Session = Depends(get_db)):
+    snapshots = db.query(PortfolioSnapshot).order_by(PortfolioSnapshot.date).all()
+    data = {
+        "dates": [s.date.strftime("%Y-%m-%d") for s in snapshots],
+        "value": [s.total_value for s in snapshots],
+        "unrealized": [s.total_unrealized for s in snapshots],
+        "realized": [s.total_realized for s in snapshots],
+    }
+    return templates.TemplateResponse("performance.html", {
+        "request": request,
+        "data": data
+    })
+
+@app.get("/performance/history", response_class=HTMLResponse)
+def view_snapshot_history(request: Request, db: Session = Depends(get_db)):
+    snapshots = db.query(models.PortfolioSnapshot).order_by(models.PortfolioSnapshot.date).all()
+    return templates.TemplateResponse("snapshot_history.html", {
+        "request": request,
+        "snapshots": snapshots
     })

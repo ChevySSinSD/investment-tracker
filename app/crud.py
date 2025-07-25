@@ -6,45 +6,6 @@ from .models import Transaction
 from .models import PortfolioSnapshot
 from .pricing import get_latest_price
 
-def save_portfolio_snapshot(db: Session):
-    txns = db.query(Transaction).all()
-
-    holdings = {}
-    total_invested = {}
-    for txn in txns:
-        ticker = txn.ticker.strip().upper()
-        qty = float(txn.quantity)
-        if txn.type == "buy":
-            holdings[ticker] = holdings.get(ticker, 0) + qty
-            total_invested[ticker] = total_invested.get(ticker, 0) + qty * txn.price + txn.fee
-        elif txn.type == "sell":
-            holdings[ticker] = holdings.get(ticker, 0) - qty
-
-    total_value = 0
-    total_cost = 0
-    for ticker, qty in holdings.items():
-        if qty <= 0:
-            continue
-        price, _ = get_latest_price(ticker)
-        value = qty * price
-        cost = total_invested.get(ticker, 0)
-        total_value += value
-        total_cost += cost
-
-    total_realized = sum(
-        compute_realized_gains(db, ticker, method="fifo")
-        for ticker in holdings.keys()
-    )
-
-    snapshot = PortfolioSnapshot(
-        total_value=round(total_value, 2),
-        total_cost=round(total_cost, 2),
-        total_unrealized=round(total_value - total_cost, 2),
-        total_realized=round(total_realized, 2),
-    )
-    db.add(snapshot)
-    db.commit()
-
 def compute_realized_gains(db: Session, ticker: str, method: str = "fifo") -> float:
     """
     Compute total realized gains for a given ticker using FIFO or LIFO.

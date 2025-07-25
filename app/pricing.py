@@ -16,6 +16,7 @@ def get_latest_price(ticker: str):
     except Exception as e:
         print(f"Error fetching price for {ticker}: {e}")
         return 0.0, None
+
 def get_historical_prices(ticker: str, days: int = 30):
     """
     Fetch historical closing prices for the past `days` days.

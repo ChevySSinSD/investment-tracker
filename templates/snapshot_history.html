@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Snapshot History</h2>
+<table class="table-auto w-full border">
+  <thead class="bg-gray-100">
+    <tr>
+      <th class="px-4 py-2 text-left border">Date</th>
+      <th class="px-4 py-2 text-left border">Total Value (USD)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for snap in snapshots %}
+    <tr>
+      <td class="px-4 py-2 border">{{ snap.date }}</td>
+      <td class="px-4 py-2 border">${{ "%.2f"|format(snap.total_value) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
