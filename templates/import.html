@@ -3,7 +3,9 @@
   <h1>Import Transactions CSV</h1>
   {% if message %}<p>{{ message }}</p>{% endif %}
   <form enctype="multipart/form-data" method="post">
-    <input type="file" name="file" accept=".csv" required>
-    <button type="submit">Upload</button>
+    <fieldset role="group">
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit">Upload</button>
+    </fieldset>
   </form>
 {% endblock %}

@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>{{ title or "Tracker" }}</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 </head>
 <body>
-  <nav>
-    <a href="/">Home</a> |
-    <a href="/import">Import CSV</a> |
-    <a href="/dashboard">Dashboard</a> |
-    <a href="/performance">Performance</a>
-  </nav>
-  <hr>
-  {% block content %}{% endblock %}
+  <header class="container">
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/import">Import CSV</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/performance">Performance</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>
