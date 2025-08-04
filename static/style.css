@@ -1,1 +1,6 @@
-body { font-family: Arial; margin: 20px; } table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px; }
+.bokeh-box {
+  background: var(--pico-background);
+  border: 1px solid var(--pico-muted-border);
+  border-radius: var(--pico-border-radius);
+  padding: 1rem;
+}

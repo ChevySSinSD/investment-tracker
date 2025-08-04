@@ -4,6 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from io import StringIO
+from bokeh.plotting import figure
+from bokeh.embed import components
+from bokeh.models import DatetimeTickFormatter
+from bokeh.io import curdoc
+from bokeh.themes import built_in_themes
 import csv
 
 from app import models, crud, schemas
@@ -194,16 +199,41 @@ def portfolio_dashboard(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/performance", response_class=HTMLResponse)
 def performance_view(request: Request, db: Session = Depends(get_db)):
-    snapshots = db.query(PortfolioSnapshot).order_by(PortfolioSnapshot.date).all()
-    data = {
-        "dates": [s.date.strftime("%Y-%m-%d") for s in snapshots],
-        "value": [s.total_value for s in snapshots],
-        "unrealized": [s.total_unrealized for s in snapshots],
-        "realized": [s.total_realized for s in snapshots],
-    }
+    snapshots = db.query(models.PortfolioSnapshot).order_by(models.PortfolioSnapshot.date).all()
+
+    if not snapshots:
+        return templates.TemplateResponse("performance.html", {
+            "request": request,
+            "script": "",
+            "div": ""
+        })
+
+    import datetime
+
+    # Ensure dates are Python datetime objects
+    dates = [s.date if isinstance(s.date, datetime.datetime) else datetime.datetime.combine(s.date, datetime.time.min) for s in snapshots]
+    values = [s.total_value for s in snapshots]
+
+    p = figure(title="Portfolio Value Over Time",
+            x_axis_type="datetime",
+            height=400,
+            sizing_mode="stretch_width")
+
+    p.line(dates, values, line_width=2, color="navy", legend_label="Total Value")
+    # p.circle(dates, values, size=5, color="navy", alpha=0.5)
+
+    p.xaxis.formatter = DatetimeTickFormatter(days="%b %d", months="%b %Y")
+    p.yaxis.axis_label = "Total Value ($)"
+    p.legend.location = "top_left"
+    curdoc.theme = built_in_themes["dark_minimal"]
+    # p.apply_theme(built_in_themes["dark_minimal"])
+
+    script, div = components(p)
+
     return templates.TemplateResponse("performance.html", {
         "request": request,
-        "data": data
+        "script": script,
+        "div": div
     })
 
 @app.get("/performance/history", response_class=HTMLResponse)
