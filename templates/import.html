@@ -4,6 +4,11 @@
   {% if message %}<p>{{ message }}</p>{% endif %}
   <form enctype="multipart/form-data" method="post">
     <fieldset role="group">
+      <!-- <label for="account">Account:</label>
+      <select name="account_id">
+        {% for acct in accounts %}
+          <option value="{{ acct.id }}">{{ acct.name }}</option>
+        {% endfor %} -->
       <input type="file" name="file" accept=".csv" required>
       <button type="submit">Upload</button>
     </fieldset>

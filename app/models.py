@@ -1,6 +1,13 @@
-from sqlalchemy import Column, Integer, String, Float, Date
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
+
+class Account(Base):
+    __tablename__ = "accounts"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    transactions = relationship("Transaction", back_populates="account")
 
 class Transaction(Base):
     __tablename__ = "transactions"
@@ -8,11 +15,13 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False)
+    transaction_type = Column(String, nullable=False)  # "buy" or "sell"
     quantity = Column(Float, nullable=False)
     price = Column(Float, nullable=False)
-    type = Column(String, nullable=False, default="buy")
-    fee = Column(Float, nullable=True, default=0.0)
-    currency = Column(String, nullable=True, default="USD")
+    fee = Column(Float, nullable=False, default=0.0)
+    currency = Column(String, nullable=False, default="USD")
+    account_id = Column(Integer, ForeignKey("accounts.id"))
+    account = relationship("Account", back_populates="transactions")
 
 class PortfolioSnapshot(Base):
     __tablename__ = "portfolio_snapshots"

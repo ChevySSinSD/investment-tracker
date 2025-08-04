@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, File, UploadFile
+from fastapi import FastAPI, Request, Depends, File, UploadFile, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -46,9 +46,9 @@ def read_portfolio(request: Request, db: Session = Depends(get_db)):
     for txn in txns:
         if txn.ticker not in holdings:
             holdings[txn.ticker] = 0
-        if txn.type == "buy":
+        if txn.transaction_type == "buy":
             holdings[txn.ticker] += txn.quantity
-        elif txn.type == "sell":
+        elif txn.transaction_type == "sell":
             holdings[txn.ticker] -= txn.quantity
 
     portfolio = []
@@ -70,6 +70,30 @@ def read_portfolio(request: Request, db: Session = Depends(get_db)):
         "transactions": txns
     })
 
+@app.get("/accounts", response_class=HTMLResponse)
+def list_accounts(request: Request, db: Session = Depends(get_db)):
+    accounts = db.query(models.Account).order_by(models.Account.name).all()
+    return templates.TemplateResponse("accounts.html", {
+        "request": request,
+        "accounts": accounts
+    })
+
+@app.post("/accounts", response_class=HTMLResponse)
+def add_account(request: Request, name: str = Form(...), db: Session = Depends(get_db)):
+    name = name.strip()
+    if name:
+        existing = db.query(models.Account).filter(models.Account.name == name).first()
+        if not existing:
+            account = models.Account(name=name)
+            db.add(account)
+            db.commit()
+    accounts = db.query(models.Account).order_by(models.Account.name).all()
+    return templates.TemplateResponse("accounts.html", {
+        "request": request,
+        "accounts": accounts,
+        "message": f"Account '{name}' added" if name else "Account name required"
+    })
+
 @app.get("/import")
 def show_import(request: Request):
     return templates.TemplateResponse("import.html", {"request": request})
@@ -83,10 +107,10 @@ async def import_csv(
     """
     Imports transactions from a CSV file.
 
-    Expected CSV columns: date, ticker, quantity, price, type (optional, defaults to 'buy').
+    Expected CSV columns: date, ticker, quantity, price, transaction_type (optional, defaults to 'buy').
     Each row is validated; if a row is missing required fields or contains invalid data,
     an error message is displayed indicating the row number and error.
-    Duplicate transactions (same date, ticker, quantity, price, type) are skipped.
+    Duplicate transactions (same date, ticker, quantity, price, transaction_type) are skipped.
     """
     content = await file.read()
     try:
@@ -100,9 +124,10 @@ async def import_csv(
                     ticker=row["ticker"].strip().upper(),  # normalize here
                     quantity=float(row["quantity"]),
                     price=float(row["price"]),
-                    type=row.get("type", "buy").lower(),
+                    transaction_type=row.get("transaction_type", "buy").lower(),
                     fee=float(row.get("fee", 0.0)),
-                    currency=row.get("currency", "USD").upper()
+                    currency=row.get("currency", "USD").upper(),
+                    account_id=int(row.get("account_id", 0)) if row.get("account_id") else None
             )
                 added = crud.add_transaction(db, txn)
                 if added:
@@ -157,10 +182,10 @@ def portfolio_dashboard(request: Request, db: Session = Depends(get_db)):
     for txn in txns:
         ticker = txn.ticker.strip().upper()
         qty = float(txn.quantity)
-        if txn.type == "buy":
+        if txn.transaction_type == "buy":
             holdings[ticker] = holdings.get(ticker, 0) + qty
             total_invested[ticker] = total_invested.get(ticker, 0) + qty * txn.price + txn.fee
-        elif txn.type == "sell":
+        elif txn.transaction_type == "sell":
             holdings[ticker] = holdings.get(ticker, 0) - qty  # reduce quantity
 
     portfolio = []
@@ -214,20 +239,20 @@ def performance_view(request: Request, db: Session = Depends(get_db)):
     dates = [s.date if isinstance(s.date, datetime.datetime) else datetime.datetime.combine(s.date, datetime.time.min) for s in snapshots]
     values = [s.total_value for s in snapshots]
 
+    curdoc().theme = built_in_themes["dark_minimal"]
     p = figure(title="Portfolio Value Over Time",
             x_axis_type="datetime",
             height=400,
             sizing_mode="stretch_width")
 
-    p.line(dates, values, line_width=2, color="navy", legend_label="Total Value")
-    # p.circle(dates, values, size=5, color="navy", alpha=0.5)
+    p.line(dates, values, line_width=2, legend_label="Total Value")
 
     p.xaxis.formatter = DatetimeTickFormatter(days="%b %d", months="%b %Y")
     p.yaxis.axis_label = "Total Value ($)"
     p.legend.location = "top_left"
-    curdoc.theme = built_in_themes["dark_minimal"]
-    # p.apply_theme(built_in_themes["dark_minimal"])
 
+    # Add the plot to the document (this is crucial for theme application)
+    curdoc().add_root(p)
     script, div = components(p)
 
     return templates.TemplateResponse("performance.html", {

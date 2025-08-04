@@ -20,7 +20,7 @@
 
   <h2>All Transactions</h2>
   <table>
-    <th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Fee</th><th>Type</th>
+    <th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Fee</th><th>Type</th><th>Account</th>
     {% for t in transactions %}
     <tr>
       <td>{{ t.date }}</td>
@@ -28,7 +28,8 @@
       <td>{{ t.quantity }}</td>
       <td>{{ t.price }}</td>
       <td>{{ t.fee }}</td>
-      <td>{{ t.type }}</td>
+      <td>{{ t.transaction_type }}</td>
+      <td>{{ t.account_id }}</td>
     </tr>
     {% endfor %}
   </table>

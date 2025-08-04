@@ -16,14 +16,14 @@ def compute_realized_gains(db: Session, ticker: str, method: str = "fifo") -> fl
     txns = db.query(Transaction).filter(Transaction.ticker == ticker).order_by(Transaction.date).all()
 
     for txn in txns:
-        if txn.type == "buy":
+        if txn.transaction_type == "buy":
             buys.append({
                 "date": txn.date,
                 "quantity": txn.quantity,
                 "price": txn.price,
                 "remaining": txn.quantity
             })
-        elif txn.type == "sell":
+        elif txn.transaction_type == "sell":
             sells.append({
                 "date": txn.date,
                 "quantity": txn.quantity,
@@ -63,7 +63,7 @@ def transaction_exists(db: Session, txn: schemas.TransactionCreate) -> bool:
         ticker=txn.ticker.upper().strip(),  # normalize
         quantity=txn.quantity,
         price=txn.price,
-        type=txn.type
+        transaction_type=txn.transaction_type
     ).first() is not None
 
 def add_transaction(db: Session, txn: schemas.TransactionCreate):

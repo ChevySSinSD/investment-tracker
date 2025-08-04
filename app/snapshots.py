@@ -20,10 +20,10 @@ def save_daily_snapshot_if_needed(db: Session):
     for txn in txns:
         ticker = txn.ticker.strip().upper()
         qty = float(txn.quantity)
-        if txn.type == "buy":
+        if txn.transaction_type == "buy":
             holdings[ticker] = holdings.get(ticker, 0) + qty
             total_invested[ticker] = total_invested.get(ticker, 0) + qty * txn.price + txn.fee
-        elif txn.type == "sell":
+        elif txn.transaction_type == "sell":
             holdings[ticker] = holdings.get(ticker, 0) - qty
 
     total_value = 0
@@ -81,9 +81,9 @@ def backfill_snapshots(db: Session):
             if t not in lots:
                 lots[t] = []
 
-            if txn.type == "buy":
+            if txn.transaction_type == "buy":
                 lots[t].append([txn.quantity, txn.price])
-            elif txn.type == "sell":
+            elif txn.transaction_type == "sell":
                 qty_to_sell = txn.quantity
                 cost_basis = 0
                 proceeds = qty_to_sell * txn.price
