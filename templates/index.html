@@ -2,36 +2,48 @@
 {% block content %}
   <h1>Portfolio Summary (Live)</h1>
   {% if portfolio %}
-  <table>
-    <tr><th>Ticker</th><th>Qty</th><th>Price</th><th>Value</th><th>As Of Dates</th></tr>
-    {% for asset in portfolio %}
-    <tr>
-      <td><a href="/chart/{{ asset.ticker }}">{{ asset.ticker }}</a></td>
-      <td>{{ asset.quantity }}</td>
-      <td>{{ "%.2f"|format(asset.price) }}</td>
-      <td>{{ "%.2f"|format(asset.value) }}</td>
-      <td>{{ asset.as_of if asset.as_of else "N/A" }}</td>
-    </tr>
-    {% endfor %}
+  <table class="sortable">
+    <thead>
+      <tr>
+        <th>Ticker</th><th>Qty</th><th>Price</th><th>Value</th><th>As Of Dates</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for asset in portfolio %}
+      <tr>
+        <td><a href="/chart/{{ asset.ticker }}">{{ asset.ticker }}</a></td>
+        <td>{{ "%.2f"|format(asset.quantity) }}</td>
+        <td>{{ "%.2f"|format(asset.price) }}</td>
+        <td>{{ "%.2f"|format(asset.value) }}</td>
+        <td>{{ asset.as_of if asset.as_of else "N/A" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
   {% else %}
     <p>No current holdings.</p>
   {% endif %}
 
   <h2>All Transactions</h2>
-  <table>
-    <th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Fee</th><th>Type</th><th>Account</th>
-    {% for t in transactions %}
-    <tr>
-      <td>{{ t.date }}</td>
-      <td>{{ t.ticker }}</td>
-      <td>{{ t.quantity }}</td>
-      <td>{{ t.price }}</td>
-      <td>{{ t.fee }}</td>
-      <td>{{ t.transaction_type }}</td>
-      <td>{{ t.account.name if t.account else "—" }}</td>
-      <td>
-    </tr>
-    {% endfor %}
+  <table class="sortable">
+    <thead>
+      <tr>
+        <th>Date</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Fee</th><th>Type</th><th>Account</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.date }}</td>
+        <td>{{ t.ticker }}</td>
+        <td>{{ t.quantity }}</td>
+        <td>{{ t.price }}</td>
+        <td>{{ t.fee }}</td>
+        <td>{{ t.transaction_type }}</td>
+        <td>{{ t.account.name if t.account else "—" }}</td>
+        <td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
-{% endblock %}
+  {% endblock %}

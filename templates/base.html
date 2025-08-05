@@ -6,13 +6,22 @@
   <!-- <link rel="stylesheet" href="static/style.css"> -->
   <!-- Bokeh JS -->
   <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.7.3.min.js"></script>
-  <!-- Pico CSS -->
+  <!-- Pico CSS  https://picocss.com -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <!-- Sortable JS  https://github.com/tofsjonas/sortable -->
+  <link href="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable-base.min.css" rel="stylesheet" /> 
+  <script src="https://cdn.jsdelivr.net/gh/tofsjonas/sortable/sortable.min.js"></script>
   <title>{{ title or "Tracker" }}</title>
 </head>
-<body>
-  <header class="container">
+<body class="container">
+  <header>
     <nav>
+      <ul>
+        <li>
+          <svg height="80" width="100%" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none"><path d="M 21.6,2.8 H 2.4 C 1.08,2.8 0,3.88 0,5.2 v 13.6 c 0,1.32 1.08,2.4 2.4,2.4 h 19.2 c 1.32,0 2.4,-1.08 2.4,-2.4 V 5.2 C 24,3.88 22.92,2.8 21.6,2.8 Z m -2.000001,10.8 c 0,0.36 -0.399999,0.52 -0.679999,0.28 l -1.84,-1.84 -4.24,3.64 c -0.48,0.48 -1.24,0.48 -1.68,0 l -2.5599998,-2.92 -4.56,4 C 3.8800008,16.919999 3.6399998,16.919999 3.48,16.76 L 3.2799998,16.56 C 3.12,16.4 3.12,16.16 3.2799998,16 L 7.7600002,9.88 c 0.48,-0.48 1.2399998,-0.48 1.68,0 L 12,12.44 14.6,9.4399998 12.92,7.9200002 c -0.24,-0.24 -0.08,-0.72 0.28,-0.72 h 5.6 c 0.439999,0 0.76,0.3999998 0.76,0.84 V 13.6 Z" fill="var(--pico-color)"/></svg>
+        </li>
+        <li><strong>Investment Tracker</strong></li>
+      </ul>
       <ul>
         <li><a href="/">Home</a></li>
         <li><a href="/accounts">Accounts</a></li>
@@ -22,7 +31,7 @@
       </ul>
     </nav>
   </header>
-  <main class="container">
+  <main>
     {% block content %}{% endblock %}
   </main>
 </body>

@@ -3,6 +3,7 @@ services:
     container_name: invest
     restart: unless-stopped
     build: .
+    image: eric/investment-tracker:latest
     networks:
       - proxy
     environment:

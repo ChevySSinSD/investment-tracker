@@ -15,14 +15,18 @@
     </form>
 
     <h3>Existing Accounts</h3>
-    <table>
-        <th>Account Name</th><th>Account ID</th></th>
-        {% for account in accounts %}
-            <tr>
-                <td>{{ account.name }}</td>
-                <td>{{ account.id }}</td>
-            </tr>   
-        {% endfor %}
+    <table class="sortable">
+      <thead>
+        <tr>
+          <th>Account Name</th><th>Account ID</th>
+        </tr>
+      </thead>
+      {% for account in accounts %}
+        <tr>
+          <td>{{ account.name }}</td>
+          <td>{{ account.id }}</td>
+        </tr>   
+      {% endfor %}
     </table>
   </section>
 </main>

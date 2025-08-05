@@ -1,2 +1,2 @@
 /data/*
-/pycache/*
+/app/__pycache__/*
