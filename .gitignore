@@ -1,1 +1,2 @@
-data/portfolio.db
+/data/*
+/pycache/*

@@ -3,7 +3,7 @@
   <h1>Portfolio Summary (Live)</h1>
   {% if portfolio %}
   <table>
-    <tr><th>Ticker</th><th>Qty</th><th>Price</th><th>Value</th><th>As Of Date</th></tr>
+    <tr><th>Ticker</th><th>Qty</th><th>Price</th><th>Value</th><th>As Of Dates</th></tr>
     {% for asset in portfolio %}
     <tr>
       <td><a href="/chart/{{ asset.ticker }}">{{ asset.ticker }}</a></td>
@@ -29,7 +29,8 @@
       <td>{{ t.price }}</td>
       <td>{{ t.fee }}</td>
       <td>{{ t.transaction_type }}</td>
-      <td>{{ t.account_id }}</td>
+      <td>{{ t.account.name if t.account else "—" }}</td>
+      <td>
     </tr>
     {% endfor %}
   </table>

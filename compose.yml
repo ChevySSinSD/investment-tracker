@@ -5,8 +5,10 @@ services:
     build: .
     networks:
       - proxy
+    environment:
+      - UVICORN_RELOAD=true
     volumes:
-      - ./data:/app/data
+      - .:/code
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.invest.rule=Host(`invest.theroeders.net`)"
